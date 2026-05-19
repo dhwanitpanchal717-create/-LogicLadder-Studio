@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D STL ↔ Ladder Converter</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-glow glow-one"></div>
+  <div class="bg-glow glow-two"></div>
+
+  <header class="glass header-3d">
+    <div>
+      <p class="eyebrow">Mini PLC IDE</p>
+      <h1>3D STL ↔ Ladder Converter</h1>
+      <p class="subtitle">Convert STL / AWL code to interactive 3D Ladder Logic and convert ladder back to STL.</p>
+    </div>
+
+    <div class="top-controls">
+      <div class="mode-switch" role="radiogroup" aria-label="Conversion Mode">
+        <label><input type="radio" name="mode" value="stl-to-ladder" checked /><span>STL → Ladder</span></label>
+        <label><input type="radio" name="mode" value="ladder-to-stl" /><span>Ladder → STL</span></label>
+      </div>
+      <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme">🌙</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="panel glass tilt-card left-panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Input</p>
+          <h2 id="input-title">STL / AWL Code Editor</h2>
+        </div>
+        <span class="status-pill" id="mode-pill">STL Mode</span>
+      </div>
+
+      <div id="stl-editor-section">
+        <textarea id="code-editor" spellcheck="false" aria-label="STL or AWL code editor"></textarea>
+        <div class="btn-group">
+          <button id="btn-sample">Load Sample</button>
+          <button id="btn-convert" class="primary">Convert</button>
+          <button id="btn-clear">Clear</button>
+        </div>
+      </div>
+
+      <div id="ladder-input-section" class="hidden">
+        <div class="ladder-tabs" role="tablist">
+          <button class="ladder-tab active" data-ladder-tab="visual-builder">3D Visual Builder</button>
+          <button class="ladder-tab" data-ladder-tab="paste-ladder">Paste Ladder</button>
+          <button class="ladder-tab" data-ladder-tab="upload-ladder">Upload File</button>
+        </div>
+
+        <div id="visual-builder-tab" class="ladder-tab-content">
+          <p class="helper-text">Add contacts and coils from the 3D toolbar. Click any ladder element to select it, then delete it if needed.</p>
+          <div class="btn-group">
+            <button id="btn-generate-from-visual" class="primary">Generate STL</button>
+            <button id="btn-clear-visual">Clear Visual</button>
+          </div>
+        </div>
+
+        <div id="paste-ladder-tab" class="ladder-tab-content hidden">
+          <textarea id="ladder-text-input" spellcheck="false" placeholder="Paste ladder text here...
+
+Network 1 - Motor Start
+
+I0.0        I0.1        Q0.0
+--[ ]------[ ]----------( )--
+Start      Safety       Motor"></textarea>
+
+          <div class="btn-group">
+            <button id="btn-load-ladder-sample">Load Ladder Sample</button>
+            <button id="btn-convert-ladder-text" class="primary">Convert Ladder Text</button>
+            <button id="btn-clear-ladder-text">Clear</button>
+          </div>
+        </div>
+
+        <div id="upload-ladder-tab" class="ladder-tab-content hidden">
+          <div class="file-upload-box">
+            <label for="ladder-file-input">Upload Ladder / AWL File</label>
+            <input type="file" id="ladder-file-input" accept=".txt,.ladder,.ld,.json,.awl" aria-label="Upload ladder or AWL file" />
+            <p id="uploaded-file-name" class="helper-text">No file uploaded yet.</p>
+            <p class="helper-text">.txt / .ladder / .ld = ladder text, .awl = Siemens STL/AWL style code.</p>
+          </div>
+
+          <textarea id="uploaded-ladder-preview" spellcheck="false" placeholder="Uploaded ladder or AWL content will appear here..."></textarea>
+
+          <div class="btn-group">
+            <button id="btn-convert-uploaded-ladder" class="primary">Convert Uploaded File</button>
+            <button id="btn-clear-uploaded-ladder">Clear Upload</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="error-message" role="alert" aria-live="polite"></div>
+    </section>
+
+    <section class="panel glass tilt-card right-panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Output</p>
+          <h2 id="output-title">Interactive 3D Ladder Preview</h2>
+        </div>
+        <div class="view-tools">
+          <button id="btn-reset-view" class="small-btn">Reset View</button>
+          <button id="btn-zoom-in" class="small-btn">Zoom +</button>
+          <button id="btn-zoom-out" class="small-btn">Zoom -</button>
+        </div>
+      </div>
+
+      <div id="ladder-toolbar" class="ladder-toolbar hidden">
+        <button data-element="NO">NO Contact</button>
+        <button data-element="NC">NC Contact</button>
+        <button data-element="COIL">Coil</button>
+        <button data-element="SET">Set</button>
+        <button data-element="RESET">Reset</button>
+        <button data-element="OR">OR Branch</button>
+        <button data-element="TIMER">Timer</button>
+        <button data-element="COUNTER">Counter</button>
+        <button id="btn-delete" disabled>Delete Selected</button>
+      </div>
+
+      <div class="stage-shell">
+        <div id="ladder-container" class="ladder-container" tabindex="0"></div>
+      </div>
+
+      <div class="panel-head output-head">
+        <div>
+          <p class="eyebrow">Code</p>
+          <h2 id="output-code-title">Generated STL / AWL Code</h2>
+        </div>
+      </div>
+
+      <pre id="output-code" class="code-output" tabindex="0"></pre>
+
+      <div class="btn-group">
+        <button id="btn-copy">Copy Output</button>
+        <button id="btn-download">Download Output</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer-3d">
+    <p>© 2026 STL ↔ Ladder Converter — Mini PLC IDE</p>
+    <div class="creator-3d">Created by Dhwanit</div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
